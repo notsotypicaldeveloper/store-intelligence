@@ -1,0 +1,47 @@
+{
+  "store_id": "ST1008",
+  "_note": "Brigade Road, Bangalore. Run 'python pipeline/calibrate.py --extract --overlay' inside Docker to verify entry_line and zone polygons against real frames.",
+  "cameras": [
+    {
+      "camera_id": "CAM_ENTRY",
+      "clip_filename": "CAM 1.mp4",
+      "role": "entry",
+      "frame_width": 1920,
+      "frame_height": 1080,
+      "_note": "Wide-angle camera covering the bottom-left entrance door. Entry line is a horizontal segment at ~78% of frame height — people cross it when entering/exiting.",
+      "entry_line": [[80, 840], [1840, 840]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_A",
+      "clip_filename": "CAM 2.mp4",
+      "role": "floor",
+      "frame_width": 1920,
+      "frame_height": 1080,
+      "_note": "Overhead/wide angle covering the top-shelf brand bays (EB Korean → Accessories row)."
+    },
+    {
+      "camera_id": "CAM_FLOOR_B",
+      "clip_filename": "CAM 3.mp4",
+      "role": "floor",
+      "frame_width": 1920,
+      "frame_height": 1080,
+      "_note": "Overhead/wide angle covering the bottom-shelf brand bays (Maybelline → Streax row)."
+    },
+    {
+      "camera_id": "CAM_BILLING",
+      "clip_filename": "CAM 4.mp4",
+      "role": "billing",
+      "frame_width": 1280,
+      "frame_height": 720,
+      "_note": "Smaller clip (~73 MB) — focused on the Cash Counter / billing area (right side of store)."
+    },
+    {
+      "camera_id": "CAM_FLOOR_C",
+      "clip_filename": "CAM 5.mp4",
+      "role": "floor",
+      "frame_width": 1280,
+      "frame_height": 720,
+      "_note": "Smaller clip — covers F.O.H / centre aisle, Nail Unit, and Makeup Unit."
+    }
+  ]
+}

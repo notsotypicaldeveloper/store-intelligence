@@ -1,0 +1,29 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./events:/app/events
+      - ./data:/app/data:ro
+    environment:
+      - DB_PATH=/app/events/events.db
+      - STORE_ID=ST1008
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pipeline:
+    build: .
+    volumes:
+      - ./events:/app/events
+      - ./data:/app/data:ro
+    environment:
+      - DB_PATH=/app/events/events.db
+      - STORE_ID=ST1008
+    command: ["python", "-m", "pipeline.run"]
+    profiles:
+      - pipeline

@@ -1,0 +1,126 @@
+{
+  "store_id": "ST1008",
+  "_note": "Zone polygons in pixel coords for each camera frame. Derived from data/_layout_extracted.png and approximate field-of-view mapping. Verify/refine with 'python pipeline/calibrate.py --overlay --camera <ID>' inside Docker.",
+  "zones": [
+    {
+      "camera_id": "CAM_ENTRY",
+      "zone_id": "FOH",
+      "_note": "Front-of-house / entrance corridor visible in entry camera",
+      "polygon": [[0, 0], [1920, 0], [1920, 840], [0, 840]]
+    },
+
+    {
+      "camera_id": "CAM_FLOOR_A",
+      "zone_id": "EB_KOREAN",
+      "polygon": [[0, 0], [220, 0], [220, 480], [0, 480]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_A",
+      "zone_id": "THE_FACE_SHOP",
+      "polygon": [[220, 0], [440, 0], [440, 480], [220, 480]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_A",
+      "zone_id": "GOOD_VIBES",
+      "polygon": [[440, 0], [660, 0], [660, 480], [440, 480]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_A",
+      "zone_id": "DERMDOC",
+      "polygon": [[660, 0], [900, 0], [900, 480], [660, 480]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_A",
+      "zone_id": "MINIMALIST",
+      "polygon": [[900, 0], [1140, 0], [1140, 480], [900, 480]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_A",
+      "zone_id": "AQUALOGICA",
+      "polygon": [[1140, 0], [1380, 0], [1380, 480], [1140, 480]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_A",
+      "zone_id": "LAKME_SKIN",
+      "polygon": [[1380, 0], [1620, 0], [1620, 480], [1380, 480]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_A",
+      "zone_id": "ACCESSORIES",
+      "polygon": [[1620, 0], [1920, 0], [1920, 480], [1620, 480]]
+    },
+
+    {
+      "camera_id": "CAM_FLOOR_B",
+      "zone_id": "MAYBELLINE",
+      "polygon": [[0, 0], [240, 0], [240, 1080], [0, 1080]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_B",
+      "zone_id": "FACES_CANADA",
+      "polygon": [[240, 0], [480, 0], [480, 1080], [240, 1080]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_B",
+      "zone_id": "LAKME",
+      "polygon": [[480, 0], [720, 0], [720, 1080], [480, 1080]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_B",
+      "zone_id": "COLORBAR_SUGAR",
+      "polygon": [[720, 0], [960, 0], [960, 1080], [720, 1080]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_B",
+      "zone_id": "SWISS_BEAUTY",
+      "polygon": [[960, 0], [1200, 0], [1200, 1080], [960, 1080]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_B",
+      "zone_id": "RENEE_NY_BAE",
+      "polygon": [[1200, 0], [1440, 0], [1440, 1080], [1200, 1080]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_B",
+      "zone_id": "ALPS_GOODNESS",
+      "polygon": [[1440, 0], [1680, 0], [1680, 1080], [1440, 1080]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_B",
+      "zone_id": "STREAX",
+      "polygon": [[1680, 0], [1920, 0], [1920, 1080], [1680, 1080]]
+    },
+
+    {
+      "camera_id": "CAM_BILLING",
+      "zone_id": "CASH_COUNTER",
+      "polygon": [[0, 0], [960, 0], [960, 720], [0, 720]]
+    },
+    {
+      "camera_id": "CAM_BILLING",
+      "zone_id": "PMU",
+      "polygon": [[960, 0], [1280, 0], [1280, 720], [960, 720]]
+    },
+
+    {
+      "camera_id": "CAM_FLOOR_C",
+      "zone_id": "FOH",
+      "polygon": [[0, 0], [640, 0], [640, 720], [0, 720]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_C",
+      "zone_id": "NAIL_UNIT",
+      "polygon": [[640, 0], [960, 0], [960, 360], [640, 360]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_C",
+      "zone_id": "MAKEUP_UNIT",
+      "polygon": [[640, 360], [960, 360], [960, 720], [640, 720]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_C",
+      "zone_id": "FRAGRANCE",
+      "polygon": [[960, 0], [1280, 0], [1280, 720], [960, 720]]
+    }
+  ]
+}
