@@ -28,6 +28,14 @@ The VLM-for-zone-classification idea was explicitly rejected: the floor-plan ima
 
 **YOLOv8s + ByteTrack.** Proven on real-world retail footage, fast enough for 15 fps 1080p on a single GPU (which Docker provides), integrates natively with the `ultralytics` library, and gives a strong track_id signal. The `s` (small) variant was chosen over `n` (nano) because detection precision on partially occluded persons near the door matters for entry counts — the core rubric metric. Off-the-shelf beats trained-custom every time when training is prohibited and approximate counts are the target.
 
+### Staff exclusion: why we rely on behaviour, not uniform colour
+
+The staff classifier (`pipeline/staff.py`) supports two signals: a torso-colour histogram matched against a known uniform palette, and behavioural signals (visiting ≥4 distinct zones, long single-zone dwell, repeated cash-counter presence). We ship with the **behavioural signal active and the colour palette empty** — a deliberate, footage-driven choice.
+
+We inspected sample frames from the entrance, billing, and floor cameras to check whether a uniform colour would be a usable signal. Finding: **staff do wear black, but so do most of the customers in these clips.** Black is therefore a poor discriminator — keying on it would flag a large share of genuine shoppers as staff and *under*-count visitors, which is a worse error than the over-count it would fix. Colour-based staff detection only pays off when the uniform is visually distinct from customer clothing (e.g. a bright branded apron); here it is not. We chose not to trade one inaccuracy for another, and not to hardcode a colour the footage doesn't support.
+
+Honest limitation that follows from this: the behavioural signal needs multi-zone movement, which only the **floor** cameras observe — the entrance camera sees a person cross the door and nothing more. So staff are excluded from floor/zone metrics but **cannot** be reliably excluded from the raw entry count at the door. A future, non-hardcoded improvement would be to *learn* the uniform palette from behaviourally-identified staff on the floor cameras and feed it to the entrance camera, rather than assume a colour up front.
+
 ---
 
 ## Decision 2 — Event schema design
