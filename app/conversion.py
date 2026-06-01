@@ -152,14 +152,30 @@ def get_converted_visitor_ids(conn, store_id: str, data_dir: str = "data") -> se
                 if brand_zone in zones:
                     converted.add(vis_id)
 
-    return converted
+    # Invariant: a converted visitor must be an actual entrant. Billing/brand
+    # signals come from the floor & billing cameras, which assign their own
+    # visitor_id space; entries come from the entrance camera. Without
+    # cross-camera Re-ID these populations don't share ids, so intersecting
+    # here keeps conversion logically consistent (0 ≤ rate ≤ 1) instead of
+    # dividing a floor-camera count by an entrance-camera count and exceeding
+    # 100%. On these 2-minute clips the intersection is empty → conversion = 0,
+    # the documented consequence of the cross-camera identity gap (see CHOICES.md).
+    entrants = {
+        row["visitor_id"]
+        for row in conn.execute(
+            """SELECT DISTINCT visitor_id FROM events
+               WHERE store_id=? AND is_staff=0 AND event_type='ENTRY'""",
+            (store_id,),
+        ).fetchall()
+    }
+    return converted & entrants
 
 
 def compute_conversion_rate(conn, store_id: str, data_dir: str = "data") -> float:
     """Conversion rate = converted visitors / unique customer visitors."""
     unique = conn.execute(
         """SELECT COUNT(DISTINCT visitor_id) as cnt FROM events
-           WHERE store_id=? AND is_staff=0 AND event_type IN ('ENTRY','REENTRY')""",
+           WHERE store_id=? AND is_staff=0 AND event_type='ENTRY'""",
         (store_id,),
     ).fetchone()["cnt"]
     if unique == 0:

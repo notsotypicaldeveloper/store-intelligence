@@ -15,11 +15,17 @@ router = APIRouter()
 def get_metrics(store_id: str):
     try:
         with get_db() as conn:
+            # Count genuine entries only. A REENTRY is a returning visitor by
+            # definition (the Re-ID step reuses a prior visitor_id), so it must
+            # NOT increment the unique-visitor count — counting it would defeat
+            # the de-dup. People already inside when a mid-session clip began
+            # (seen only exiting/re-entering) are not counted as new entrants;
+            # this is a documented consequence of clip-window observation.
             row = conn.execute(
                 """SELECT COUNT(DISTINCT visitor_id) as cnt
                    FROM events
                    WHERE store_id=? AND is_staff=0
-                     AND event_type IN ('ENTRY','REENTRY')""",
+                     AND event_type = 'ENTRY'""",
                 (store_id,),
             ).fetchone()
             unique_visitors = row["cnt"] if row else 0

@@ -19,12 +19,14 @@ def get_funnel(store_id: str):
     """
     try:
         with get_db() as conn:
-            # Stage 1: distinct entry sessions (ENTRY or REENTRY, staff excluded)
+            # Stage 1: distinct entrants (ENTRY only; staff excluded). REENTRY is
+            # a returning visitor and must not inflate the funnel's top — the
+            # Re-ID step already reused the original visitor_id.
             entry_count = conn.execute(
                 """SELECT COUNT(DISTINCT visitor_id) as cnt
                    FROM events
                    WHERE store_id=? AND is_staff=0
-                     AND event_type IN ('ENTRY','REENTRY')""",
+                     AND event_type = 'ENTRY'""",
                 (store_id,),
             ).fetchone()["cnt"]
 
@@ -37,7 +39,7 @@ def get_funnel(store_id: str):
                      AND e.visitor_id IN (
                          SELECT DISTINCT visitor_id FROM events
                          WHERE store_id=? AND is_staff=0
-                           AND event_type IN ('ENTRY','REENTRY')
+                           AND event_type = 'ENTRY'
                      )""",
                 (store_id, store_id),
             ).fetchone()["cnt"]
@@ -51,7 +53,7 @@ def get_funnel(store_id: str):
                      AND e.visitor_id IN (
                          SELECT DISTINCT visitor_id FROM events
                          WHERE store_id=? AND is_staff=0
-                           AND event_type IN ('ENTRY','REENTRY')
+                           AND event_type = 'ENTRY'
                      )""",
                 (store_id, store_id),
             ).fetchone()["cnt"]
