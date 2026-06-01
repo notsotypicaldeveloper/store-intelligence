@@ -2,42 +2,38 @@
 
 End-to-end CCTV → detection → event stream → analytics API for a single physical store (5 cameras).
 
-## Quick start
+## Instructions to Run
+
+**Prerequisites:** Docker + Docker Compose.
+
+### 1. Place the dataset
+
+Put all **5 videos in `data/clips/`** with these exact names (rename your `CAM 1`–`CAM 5` files — they're looked up by name, not number):
+
+| Filename in `data/clips/` | Covers |
+|---|---|
+| `entrance.mp4` | Entrance door — entry/exit counting line |
+| `floor_top_brands.mp4` | Top-shelf brand bays |
+| `floor_bottom_brands.mp4` | Bottom-shelf brand bays |
+| `cash_counter.mp4` | Cash Counter / billing area |
+| `accessories_area.mp4` | Accessories area / back corner |
+
+The POS sales CSV can keep any name, anywhere under `data/` — auto-discovered.
+
+### 2. Build & run
 
 ```bash
-# 1. Clone and enter the repo
-git clone <repo-url> store-intelligence && cd store-intelligence
-
-# 2. Place the dataset in data/ — clips in data/clips/ named:
-#    entrance.mp4, floor_top_brands.mp4, floor_bottom_brands.mp4,
-#    cash_counter.mp4, accessories_area.mp4
-#    POS CSV anywhere in data/ (e.g. pos_transactions.csv) — discovered automatically
-
-# 3. Build images (YOLO weights baked in for offline runs)
-docker compose build api pipeline dashboard
-
-# 4. Detection pipeline → events/events.jsonl  (CPU-bound; logs progress per clip)
-docker compose --profile pipeline run --rm pipeline    # skip if events.jsonl already exists
-
-# 5. Start the API at http://localhost:8000
-docker compose up -d api
-
-# 6. Seed the database (use python3 if python is unaliased)
-python3 replay.py --speed 0
-
-# for seeing realtime updation of matrix
-python3 replay.py --speed 5
-
-
-# 7. (Optional) Live terminal dashboard — replays events at simulated real time
-#    and shows store metrics updating live, proving pipeline↔API are connected
-docker compose --profile dashboard run --rm dashboard
+docker compose build                                    # YOLOv8 baked in, runs offline
+docker compose --profile pipeline run --rm pipeline     # 5 clips → events/events.jsonl
+docker compose up -d api                                # API on http://localhost:8000
+python3 replay.py --speed 0                             # seed the database
 ```
 
-The API is then available at **http://localhost:8000** — OpenAPI docs: http://localhost:8000/docs
+### 3. Query analytics
+
+Open **http://localhost:8000/docs**, or:
 
 ```bash
-# Query the analytics (or browse the docs UI above)
 curl localhost:8000/health
 curl localhost:8000/stores/ST1008/metrics   | python3 -m json.tool
 curl localhost:8000/stores/ST1008/funnel    | python3 -m json.tool
@@ -45,23 +41,15 @@ curl localhost:8000/stores/ST1008/heatmap   | python3 -m json.tool
 curl localhost:8000/stores/ST1008/anomalies | python3 -m json.tool
 ```
 
-> **Note:** app code is baked into the image. After changing code under `app/`, rebuild with `docker compose up -d --build api` — `docker compose restart` alone keeps the old code.
-
-### Part E — Live Dashboard
+### 4. (Optional) Live dashboard
 
 ```bash
-# Option A: in Docker (requires events.jsonl from the pipeline step)
-docker compose --profile dashboard up dashboard
-
-# Option B: locally (API must be running on :8000)
-pip install rich
-python3 dashboard.py --speed 50        # 50× realtime, ~30s run
-python3 dashboard.py --speed 0         # flood as fast as possible
+docker compose --profile dashboard up dashboard   # in Docker
+# or locally (API must be up):
+pip install rich && python3 dashboard.py --speed 50
 ```
 
-The dashboard streams `events/events.jsonl` into the API one simulated-second window at a time,
-then polls `/stores/ST1008/metrics` after every batch — so the four KPI panels (visitors,
-conversion rate, zone dwell, funnel) update live as events are ingested. Press `Ctrl-C` to exit.
+> **Note:** app code is baked into the image. After changing code under `app/`, rebuild with `docker compose up -d --build api` — `docker compose restart` alone keeps the old code.
 
 ---
 
