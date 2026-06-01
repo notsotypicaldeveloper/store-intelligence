@@ -23,11 +23,14 @@ The POS sales CSV can keep any name, anywhere under `data/` — auto-discovered.
 ### 2. Build & run
 
 ```bash
+rm -f events/events.db                                  # delete any stale DB first (fresh seed)
 docker compose build                                    # YOLOv8 baked in, runs offline
 docker compose --profile pipeline run --rm pipeline     # 5 clips → events/events.jsonl
 docker compose up -d api                                # API on http://localhost:8000
 python3 replay.py --speed 0                             # seed the database
 ```
+
+> **Note:** if `events/events.db` already exists, delete it before seeding (`rm -f events/events.db`). The DB is a generated runtime artifact; starting from a stale one can mix old and new events. A bundled `events/events.jsonl` is included so you can skip the detection pipeline and seed directly with `python3 replay.py --speed 0`.
 
 ### 3. Query analytics
 
