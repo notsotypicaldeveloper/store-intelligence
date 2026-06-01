@@ -46,14 +46,27 @@ _CONVERSION_WINDOW_MINUTES = 5
 
 
 def _load_pos_df(data_dir: str = "data") -> pd.DataFrame:
-    """Load and parse the POS CSV, returning a clean DataFrame."""
-    pattern = os.path.join(data_dir, "Brigade_Bangalore_*.csv")
-    matches = glob.glob(pattern)
-    if not matches:
-        logger.warning("No POS CSV found at %s", pattern)
-        return pd.DataFrame()
+    """Load and parse the POS CSV, returning a clean DataFrame.
 
-    df = pd.read_csv(matches[0], dtype=str)
+    The POS file ships under different names across datasets (the challenge
+    spec names it ``Brigade_Bangalore_*.csv``; the bundled fixture is
+    ``pos_transactions.csv``). Try the known names, then any POS-looking CSV,
+    so conversion works regardless of how the file is delivered. The
+    ``POS_CSV`` env var overrides discovery.
+    """
+    csv_path = os.environ.get("POS_CSV")
+    if not csv_path or not os.path.exists(csv_path):
+        matches: list[str] = []
+        for pattern in ("Brigade_Bangalore_*.csv", "pos_transactions.csv", "*pos*.csv"):
+            matches = glob.glob(os.path.join(data_dir, pattern))
+            if matches:
+                break
+        if not matches:
+            logger.warning("No POS CSV found in %s", data_dir)
+            return pd.DataFrame()
+        csv_path = matches[0]
+
+    df = pd.read_csv(csv_path, dtype=str)
     # Parse timestamp: order_date (DD-MM-YYYY) + order_time (HH:MM:SS)
     df["order_dt"] = pd.to_datetime(
         df["order_date"].str.strip() + " " + df["order_time"].str.strip(),

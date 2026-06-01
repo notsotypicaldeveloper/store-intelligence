@@ -66,9 +66,14 @@ def iter_tracks(
         raise FileNotFoundError(f"Cannot open clip: {clip_path}")
 
     fps = cap.get(cv2.CAP_PROP_FPS) or 15.0
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
     frame_idx = 0
+    next_log_pct = 10   # next progress milestone to log
 
-    logger.info("Starting detection: %s  camera=%s  fps=%.1f", clip_path, camera_id, fps)
+    logger.info(
+        "Starting detection: %s  camera=%s  fps=%.1f  frames=%d",
+        clip_path, camera_id, fps, total_frames,
+    )
 
     try:
         while True:
@@ -107,5 +112,13 @@ def iter_tracks(
 
             yield records
             frame_idx += 1
+
+            # Periodic progress so long clips don't look hung on CPU
+            while total_frames and frame_idx * 100 >= next_log_pct * total_frames and next_log_pct <= 100:
+                logger.info(
+                    "  %s detection %d%% (%d/%d frames)",
+                    camera_id, next_log_pct, frame_idx, total_frames,
+                )
+                next_log_pct += 10
     finally:
         cap.release()

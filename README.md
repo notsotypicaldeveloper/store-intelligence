@@ -2,41 +2,53 @@
 
 End-to-end CCTV → detection → event stream → analytics API for a single physical store (5 cameras).
 
-## Quick start (5 commands)
+## Quick start
 
 ```bash
 # 1. Clone and enter the repo
 git clone <repo-url> store-intelligence && cd store-intelligence
 
-# 2. Drop the challenge dataset into data/clips/ — rename clips to:
+# 2. Place the dataset in data/ — clips in data/clips/ named:
 #    entrance.mp4, floor_top_brands.mp4, floor_bottom_brands.mp4,
 #    cash_counter.mp4, accessories_area.mp4
-#    Also: data/_layout_extracted.png
-#          data/Brigade_Bangalore_10_April_26*.csv
+#    POS CSV anywhere in data/ (e.g. pos_transactions.csv) — discovered automatically
 
-# 3. Run the detection pipeline (outputs events/events.jsonl)
-docker compose --profile pipeline run --rm pipeline
+# 3. Build images (YOLO weights baked in for offline runs)
+docker compose build api pipeline dashboard
 
-# 4. Start the API
-docker compose up
+# 4. Detection pipeline → events/events.jsonl  (CPU-bound; logs progress per clip)
+docker compose --profile pipeline run --rm pipeline    # skip if events.jsonl already exists
 
-# 5. Replay events into the API (seeds the database for live analytics)
-python replay.py
+# 5. Start the API at http://localhost:8000
+docker compose up -d api
+
+# 6. Seed the database (use python3 if python is unaliased)
+python3 replay.py --speed 0
 ```
 
-The API is then available at **http://localhost:8000**
-OpenAPI docs: http://localhost:8000/docs
+The API is then available at **http://localhost:8000** — OpenAPI docs: http://localhost:8000/docs
+
+```bash
+# Query the analytics (or browse the docs UI above)
+curl localhost:8000/health
+curl localhost:8000/stores/ST1008/metrics   | python3 -m json.tool
+curl localhost:8000/stores/ST1008/funnel    | python3 -m json.tool
+curl localhost:8000/stores/ST1008/heatmap   | python3 -m json.tool
+curl localhost:8000/stores/ST1008/anomalies | python3 -m json.tool
+```
+
+> **Note:** app code is baked into the image. After changing code under `app/`, rebuild with `docker compose up -d --build api` — `docker compose restart` alone keeps the old code.
 
 ### Part E — Live Dashboard
 
 ```bash
-# Option A: in Docker (after step 3 above — events.jsonl must exist)
+# Option A: in Docker (requires events.jsonl from the pipeline step)
 docker compose --profile dashboard up dashboard
 
 # Option B: locally (API must be running on :8000)
 pip install rich
-python dashboard.py --speed 50        # 50× realtime, ~30s run
-python dashboard.py --speed 0         # flood as fast as possible
+python3 dashboard.py --speed 50        # 50× realtime, ~30s run
+python3 dashboard.py --speed 0         # flood as fast as possible
 ```
 
 The dashboard streams `events/events.jsonl` into the API one simulated-second window at a time,
