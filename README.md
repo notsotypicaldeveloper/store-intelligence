@@ -15,7 +15,7 @@ git clone <repo-url> store-intelligence && cd store-intelligence
 #          data/Brigade_Bangalore_10_April_26*.csv
 
 # 3. Run the detection pipeline (outputs events/events.jsonl)
-docker compose --profile pipeline run pipeline
+docker compose --profile pipeline run --rm pipeline
 
 # 4. Start the API
 docker compose up
@@ -80,8 +80,8 @@ Zone polygons and the entry line are configured in `config/cameras.json` and `co
 
 ```bash
 # Inside Docker (has OpenCV + ffmpeg):
-docker compose run pipeline python pipeline/calibrate.py --extract
-docker compose run pipeline python pipeline/calibrate.py --overlay --camera CAM_ENTRY
+docker compose run --rm pipeline python pipeline/calibrate.py --extract
+docker compose run --rm pipeline python pipeline/calibrate.py --overlay --camera CAM_ENTRY
 # Overlay image written to data/_frames/entrance_overlay.jpg
 ```
 
