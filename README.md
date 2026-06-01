@@ -26,7 +26,7 @@ The POS sales CSV can keep any name, anywhere under `data/` — auto-discovered.
 rm -f events/events.db                                  # delete any stale DB first (fresh seed)
 docker compose build                                    # YOLOv8 baked in, runs offline
 docker compose --profile pipeline run --rm pipeline     # 5 clips → events/events.jsonl
-docker compose up -d api                                # API on http://localhost:8000
+docker compose up -d api                                # API + Swagger docs on http://localhost:8000/docs
 python3 replay.py --speed 0                             # seed the database
 ```
 
