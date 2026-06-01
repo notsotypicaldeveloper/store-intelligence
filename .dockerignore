@@ -1,0 +1,26 @@
+# Version control & IDE
+.git
+.gitignore
+.claude
+
+# Large/mounted data — provided via docker-compose volumes at runtime
+data
+events
+
+# Python caches & test artifacts
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Local envs
+.venv
+venv
+*.egg-info
+
+# Docs not needed in the runtime image
+Purplle_Tech_Challenge_2026_Round2.md
+
+# Baked separately at build time
+yolov8s.pt
