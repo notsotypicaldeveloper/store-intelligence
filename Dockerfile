@@ -18,6 +18,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Bake YOLOv8 weights into the image (downloads to /app/yolov8s.pt) so the
+# pipeline runs fully offline with no cold-start download per container.
+RUN python -c "from ultralytics import YOLO; YOLO('yolov8s.pt')"
+
 COPY . .
 
 # API default; pipeline overrides CMD via docker compose run
