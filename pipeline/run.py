@@ -108,14 +108,29 @@ def process_camera(
     logger.info("Processing %s (role=%s)", clip_path.name, cam_cfg.get("role"))
     frame_events: list[dict] = []
 
-    frame_ref: list[object] = [None]  # holder so track iteration can access current frame
-
-    for frame_records in iter_tracks(clip_path, camera_id, frame_skip=frame_skip):
+    for frame, frame_records in iter_tracks(clip_path, camera_id, frame_skip=frame_skip):
         if not frame_records:
             continue
 
         frame_idx = frame_records[0].frame_idx
         ts = frame_to_timestamp(clip_start, frame_idx, fps)
+        sim_time = frame_idx / fps   # clip-relative seconds, for the Re-ID window
+
+        # Entry/exit FIRST so a new track's visitor_id session exists before we
+        # resolve it for zone/staff events below. Re-ID de-dups re-entries.
+        if is_entry and counter:
+            cross_evs = counter.process_frame(frame_records, frame, reid, sim_time)
+            for ce in cross_evs:
+                ev = build_event(
+                    store_id=store_id,
+                    camera_id=camera_id,
+                    visitor_id=ce.visitor_id,
+                    event_type=ce.event_type,
+                    timestamp=ts,
+                    confidence=ce.confidence,
+                    is_staff=staff_clf.is_staff(ce.visitor_id),
+                )
+                frame_events.append(ev)
 
         for rec in frame_records:
             tid = rec.track_id
@@ -131,6 +146,11 @@ def process_camera(
                     floor_sessions[tid] = f"VIS_{uuid.uuid4().hex[:12]}"
                 visitor_id = floor_sessions[tid]
 
+            # Feed the staff classifier real signals: current zone (behavioural)
+            # + frame crop (uniform colour). Previously this was called with
+            # all-None args, so is_staff could never become True.
+            zone_now = zone_tracker.zone_at(rec.foot_xy)
+            staff_clf.update(visitor_id, zone_now, frame, rec.bbox_xyxy)
             is_staff = staff_clf.is_staff(visitor_id)
 
             # Zone events
@@ -155,23 +175,17 @@ def process_camera(
                 )
                 frame_events.append(ev)
 
-            # Staff classifier update
-            staff_clf.update(visitor_id, None, None, None)
-
-        # Entry / exit events for entry camera
-        if is_entry and counter:
-            cross_evs = counter.process_frame(frame_records)
-            for ce in cross_evs:
-                ev = build_event(
-                    store_id=store_id,
-                    camera_id=camera_id,
-                    visitor_id=ce.visitor_id,
-                    event_type=ce.event_type,
-                    timestamp=ts,
-                    confidence=ce.confidence,
-                    is_staff=staff_clf.is_staff(ce.visitor_id),
-                )
-                frame_events.append(ev)
+    # Staff post-pass: classification accrues over the clip, so mark ALL events
+    # of any visitor finally classified as staff (not just the later ones).
+    staff_set = staff_clf.staff_ids()
+    if staff_set:
+        flagged = 0
+        for ev in frame_events:
+            if ev.get("visitor_id") in staff_set and not ev.get("is_staff"):
+                ev["is_staff"] = True
+                flagged += 1
+        logger.info("Camera %s: %d staff visitor(s), %d events re-flagged",
+                    camera_id, len(staff_set), flagged)
 
     all_events.extend(frame_events)
     logger.info("Camera %s done: %d events", camera_id, len(frame_events))

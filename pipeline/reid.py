@@ -49,24 +49,31 @@ class ReIDTracker:
         self._threshold = threshold
         self._exits: list[_ExitRecord] = []
 
-    def record_exit(self, visitor_id: str, frame: np.ndarray, bbox_xyxy: tuple) -> None:
+    def record_exit(
+        self, visitor_id: str, frame: np.ndarray, bbox_xyxy: tuple,
+        now: Optional[float] = None,
+    ) -> None:
+        # `now` is the simulated clip time (seconds) when running over a video
+        # file; falls back to wall-clock for unit tests / live use.
+        now = time.monotonic() if now is None else now
         sig = _compute_signature(frame, bbox_xyxy)
         if sig is not None:
             self._exits.append(_ExitRecord(
                 visitor_id=visitor_id,
                 signature=sig,
-                exited_at=time.monotonic(),
+                exited_at=now,
             ))
-        self._prune()
+        self._prune(now)
 
     def check_reentry(
-        self, frame: np.ndarray, bbox_xyxy: tuple
+        self, frame: np.ndarray, bbox_xyxy: tuple, now: Optional[float] = None
     ) -> Optional[str]:
         """
         Return a prior visitor_id if the entering person matches a recent exit,
         else None (new ENTRY).
         """
-        self._prune()
+        now = time.monotonic() if now is None else now
+        self._prune(now)
         sig = _compute_signature(frame, bbox_xyxy)
         if sig is None:
             return None
@@ -84,8 +91,8 @@ class ReIDTracker:
             return best_vid
         return None
 
-    def _prune(self) -> None:
-        now = time.monotonic()
+    def _prune(self, now: Optional[float] = None) -> None:
+        now = time.monotonic() if now is None else now
         self._exits = [r for r in self._exits if now - r.exited_at <= self._window]
 
 

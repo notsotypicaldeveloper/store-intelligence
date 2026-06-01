@@ -21,9 +21,12 @@ from pipeline.detect import TrackRecord
 logger = logging.getLogger(__name__)
 
 # Hysteresis band: a track must cross the line by this many pixels AND hold
-# direction for MIN_CROSS_FRAMES frames before we emit an event.
-MIN_CROSS_FRAMES = 2
-HYSTERESIS_PX = 8
+# direction for MIN_CROSS_FRAMES frames before we emit an event. Raised from
+# (2, 8) to (3, 25): the looser values let track jitter near the door produce
+# spurious ENTRY/EXIT flickers (e.g. an ENTRY+EXIT in the same second), which
+# inflated the visitor count.
+MIN_CROSS_FRAMES = 3
+HYSTERESIS_PX = 25
 
 
 @dataclass
@@ -66,7 +69,22 @@ class LineCrossingCounter:
         # visitor session registry: track_id → visitor_id (for this camera)
         self._session: dict[int, str] = {}
 
-    def process_frame(self, records: list[TrackRecord]) -> list[CountingResult]:
+    def process_frame(
+        self,
+        records: list[TrackRecord],
+        frame=None,
+        reid=None,
+        sim_time: float = 0.0,
+    ) -> list[CountingResult]:
+        """
+        Detect line crossings for this frame.
+
+        If `frame` and `reid` (a ReIDTracker) are supplied, an inbound crossing
+        is checked against recently-exited visitors: a match emits REENTRY
+        reusing the prior visitor_id (so the person is not double-counted),
+        otherwise a fresh ENTRY. `sim_time` is the clip time in seconds, used
+        for the Re-ID window.
+        """
         events: list[CountingResult] = []
         seen_ids = set()
 
@@ -98,11 +116,23 @@ class LineCrossingCounter:
 
             if state.frames_on_side >= MIN_CROSS_FRAMES:
                 if new_side == -1:  # crossed inbound (outside→inside)
-                    vid = str(uuid.uuid4()).replace("-", "")[:12]
-                    vid = f"VIS_{vid}"
+                    # Re-ID de-dup: does this person match someone who recently
+                    # exited? If so, reuse their visitor_id and emit REENTRY so
+                    # the unique-visitor count is not inflated by re-entries or
+                    # ByteTrack track fragmentation.
+                    prior_vid = None
+                    if reid is not None and frame is not None:
+                        prior_vid = reid.check_reentry(frame, rec.bbox_xyxy, sim_time)
+
+                    if prior_vid:
+                        vid = prior_vid
+                        event_type = "REENTRY"
+                    else:
+                        vid = f"VIS_{str(uuid.uuid4()).replace('-', '')[:12]}"
+                        event_type = "ENTRY"
                     self._session[tid] = vid
                     events.append(CountingResult(
-                        event_type="ENTRY",
+                        event_type=event_type,
                         visitor_id=vid,
                         track_id=tid,
                         frame_idx=rec.frame_idx,
@@ -112,7 +142,10 @@ class LineCrossingCounter:
                     ))
                     state.has_entered = True
                 else:  # crossed outbound (inside→outside)
-                    vid = self._session.get(tid, f"VIS_{tid:08x}")
+                    # A track with no recorded entry session was already inside
+                    # when the clip began; tag it distinctly so it is never
+                    # mistaken for an entry-paired visitor.
+                    vid = self._session.get(tid) or f"VIS_pre_{tid:06d}"
                     events.append(CountingResult(
                         event_type="EXIT",
                         visitor_id=vid,
@@ -122,6 +155,9 @@ class LineCrossingCounter:
                         confidence=rec.confidence,
                         low_confidence=rec.low_confidence,
                     ))
+                    # Register this exit as a re-entry candidate.
+                    if reid is not None and frame is not None:
+                        reid.record_exit(vid, frame, rec.bbox_xyxy, sim_time)
 
             state.side = new_side
             state.frames_on_side = 1

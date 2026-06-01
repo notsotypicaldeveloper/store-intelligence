@@ -44,9 +44,11 @@ def iter_tracks(
     clip_path: str | Path,
     camera_id: str,
     frame_skip: int = 1,
-) -> Generator[list[TrackRecord], None, None]:
+) -> Generator[tuple, None, None]:
     """
-    Yield one list of TrackRecords per processed frame.
+    Yield (frame, [TrackRecord, ...]) per processed frame. The raw frame is
+    yielded so callers can compute appearance signatures (re-entry Re-ID,
+    staff uniform colour) without re-decoding the clip.
     Requires ultralytics + opencv-python-headless (available in Docker).
 
     frame_skip=1 → every frame; frame_skip=2 → every other frame, etc.
@@ -110,7 +112,7 @@ def iter_tracks(
                         low_confidence=(conf < CONF_WARN),
                     ))
 
-            yield records
+            yield frame, records
             frame_idx += 1
 
             # Periodic progress so long clips don't look hung on CPU

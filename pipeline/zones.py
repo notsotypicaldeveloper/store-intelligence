@@ -149,6 +149,10 @@ class ZoneTracker:
 
         return events
 
+    def zone_at(self, foot_xy: tuple[float, float]) -> Optional[str]:
+        """Public: which zone the foot position currently falls in (or None)."""
+        return self._point_in_zone(foot_xy)
+
     def _point_in_zone(self, foot_xy: tuple[float, float]) -> Optional[str]:
         """Ray-casting point-in-polygon; returns zone_id of first match."""
         x, y = foot_xy

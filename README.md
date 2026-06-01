@@ -24,6 +24,14 @@ docker compose up -d api
 
 # 6. Seed the database (use python3 if python is unaliased)
 python3 replay.py --speed 0
+
+# for seeing realtime updation of matrix
+python3 replay.py --speed 5
+
+
+# 7. (Optional) Live terminal dashboard — replays events at simulated real time
+#    and shows store metrics updating live, proving pipeline↔API are connected
+docker compose --profile dashboard run --rm dashboard
 ```
 
 The API is then available at **http://localhost:8000** — OpenAPI docs: http://localhost:8000/docs

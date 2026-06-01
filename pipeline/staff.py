@@ -93,6 +93,16 @@ class StaffClassifier:
     def is_staff(self, visitor_id: str) -> bool:
         return self._profiles[visitor_id].is_staff
 
+    def staff_ids(self) -> set[str]:
+        """Final set of visitor_ids classified as staff after the whole clip.
+
+        Used for a consistent post-pass: because classification is built up
+        incrementally, early events for a visitor may pre-date the frame where
+        enough signal accrued to flag them. Applying this set at the end marks
+        all of a staff member's events, not just the later ones.
+        """
+        return {vid for vid, p in self._profiles.items() if p.is_staff}
+
     def _classify(self, profile: _VisitorProfile) -> bool:
         # Colour match against uniform palette
         colour_match = False

@@ -115,6 +115,65 @@ def test_counting_floor_camera_no_entry():
     assert all(e.camera_id == "CAM_FLOOR_A" for e in events)
 
 
+# ── U5b: Re-entry de-dup wiring (regression for inflated visitor count) ─────
+
+class _StubReID:
+    """Minimal ReIDTracker stand-in: always reports a re-entry match."""
+
+    def __init__(self, match_vid="VIS_PRIOR"):
+        self.match_vid = match_vid
+        self.exits = []
+
+    def check_reentry(self, frame, bbox, now=0.0):
+        return self.match_vid
+
+    def record_exit(self, vid, frame, bbox, now=0.0):
+        self.exits.append(vid)
+
+
+def _entry_sequence_reid(counter, track_id, start_y, end_y, reid, n_frames=12):
+    events = []
+    for i in range(n_frames):
+        cy = start_y + (end_y - start_y) * i / (n_frames - 1)
+        rec = make_track(track_id, 960, cy, i)
+        events.extend(
+            counter.process_frame([rec], frame="FRAME", reid=reid, sim_time=float(i))
+        )
+    return events
+
+
+def test_counting_reentry_dedup_reuses_visitor_id():
+    """Inbound crossing matched by Re-ID emits REENTRY reusing the prior id,
+    not a fresh ENTRY — re-entries / track fragmentation must not inflate the
+    unique-visitor count."""
+    counter = LineCrossingCounter("CAM_ENTRY", ENTRY_LINE)
+    reid = _StubReID("VIS_PRIOR")
+    events = _entry_sequence_reid(counter, 1, 200, 800, reid)
+    reentry = [e for e in events if e.event_type == "REENTRY"]
+    entry = [e for e in events if e.event_type == "ENTRY"]
+    assert len(reentry) == 1
+    assert reentry[0].visitor_id == "VIS_PRIOR"
+    assert entry == []
+
+
+def test_counting_exit_records_reentry_candidate():
+    """An outbound crossing registers the visitor as a re-entry candidate."""
+    counter = LineCrossingCounter("CAM_ENTRY", ENTRY_LINE)
+    reid = _StubReID()
+    _entry_sequence_reid(counter, 1, 200, 800, reid)   # enter → session[1]=VIS_PRIOR
+    _entry_sequence_reid(counter, 1, 800, 200, reid)   # exit
+    assert "VIS_PRIOR" in reid.exits
+
+
+def test_counting_no_reid_still_emits_entry():
+    """With no Re-ID supplied, behaviour is unchanged: a fresh ENTRY."""
+    counter = LineCrossingCounter("CAM_ENTRY", ENTRY_LINE)
+    events = _entry_sequence_reid(counter, 1, 200, 800, reid=None)
+    entry = [e for e in events if e.event_type == "ENTRY"]
+    assert len(entry) == 1
+    assert entry[0].visitor_id.startswith("VIS_")
+
+
 # ── U6: Re-ID ─────────────────────────────────────────────────────────────
 
 def make_blank_frame(h=720, w=1280):
