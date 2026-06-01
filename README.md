@@ -8,15 +8,28 @@ End-to-end CCTV → detection → event stream → analytics API for a single ph
 
 ### 1. Place the dataset
 
-Put all **5 videos in `data/clips/`** with these exact names (rename your `CAM 1`–`CAM 5` files — they're looked up by name, not number):
+Put all **5 videos in `data/clips/`** with these exact names — they're looked up by name, not number.
 
-| Filename in `data/clips/` | Covers |
+> ⚠️ **The `CAM 1`–`CAM 5` numbering does NOT map 1:1 to the roles below.** Watch each clip first and match it to what it actually shows, then copy it to the matching target name. Don't assume `CAM 1` = entrance.
+
+| Target name in `data/clips/` | What the clip should show |
 |---|---|
 | `entrance.mp4` | Entrance door — entry/exit counting line |
 | `floor_top_brands.mp4` | Top-shelf brand bays |
 | `floor_bottom_brands.mp4` | Bottom-shelf brand bays |
 | `cash_counter.mp4` | Cash Counter / billing area |
 | `accessories_area.mp4` | Accessories area / back corner |
+
+Once you've identified which source file is which, copy and rename them (example — replace the source names with your actual mapping):
+
+```bash
+mkdir -p data/clips
+cp "<clip showing entrance>"        data/clips/entrance.mp4
+cp "<clip showing top brand bays>"  data/clips/floor_top_brands.mp4
+cp "<clip showing bottom bays>"     data/clips/floor_bottom_brands.mp4
+cp "<clip showing cash counter>"    data/clips/cash_counter.mp4
+cp "<clip showing accessories>"     data/clips/accessories_area.mp4
+```
 
 The POS sales CSV can keep any name, anywhere under `data/` — auto-discovered.
 
