@@ -6,6 +6,7 @@ services:
     volumes:
       - ./events:/app/events
       - ./data:/app/data:ro
+      - ./config:/app/config:ro
     environment:
       - DB_PATH=/app/events/events.db
       - STORE_ID=ST1008
@@ -21,9 +22,32 @@ services:
     volumes:
       - ./events:/app/events
       - ./data:/app/data:ro
+      - ./config:/app/config:ro
     environment:
       - DB_PATH=/app/events/events.db
       - STORE_ID=ST1008
     command: ["python", "-m", "pipeline.run"]
     profiles:
       - pipeline
+
+  dashboard:
+    build: .
+    volumes:
+      - ./events:/app/events
+    environment:
+      - DB_PATH=/app/events/events.db
+    # Waits for the API to be healthy, then streams events live
+    depends_on:
+      api:
+        condition: service_healthy
+    command:
+      - python
+      - dashboard.py
+      - --api
+      - http://api:8000
+      - --speed
+      - "50"
+    stdin_open: true
+    tty: true
+    profiles:
+      - dashboard

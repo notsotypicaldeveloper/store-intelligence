@@ -41,7 +41,7 @@ _BRAND_TO_ZONE: dict[str, str] = {
     "Accessories": "ACCESSORIES",
 }
 
-_BILLING_ZONES = {"CASH_COUNTER", "FOH"}  # zones that indicate billing-queue proximity
+_BILLING_ZONES = {"CASH_COUNTER"}
 _CONVERSION_WINDOW_MINUTES = 5
 
 
@@ -96,7 +96,7 @@ def get_converted_visitor_ids(conn, store_id: str, data_dir: str = "data") -> se
            WHERE store_id=? AND is_staff=0
              AND (event_type='BILLING_QUEUE_JOIN'
                   OR (event_type IN ('ZONE_ENTER','ZONE_EXIT','ZONE_DWELL')
-                      AND zone_id IN ('CASH_COUNTER','FOH')))
+                      AND zone_id = 'CASH_COUNTER'))
            ORDER BY timestamp""",
         (store_id,),
     ).fetchall()

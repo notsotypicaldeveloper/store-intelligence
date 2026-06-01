@@ -15,7 +15,7 @@ The unit of truth is the **visitor session**. The north-star metric is **offline
 ## Architecture overview
 
 ```
-data/clips/CAM*.mp4
+data/clips/*.mp4
         │
         ▼
 ┌─────────────────────────────────────────┐
@@ -69,7 +69,7 @@ data/clips/CAM*.mp4
 
 Each video clip is processed independently. YOLOv8s detects persons per frame; ByteTrack assigns stable `track_id`s across frames (handles occlusion by keeping low-confidence boxes in the association graph rather than dropping them).
 
-The **entry camera** (CAM 1, `role: entry`) is the single source of truth for entry/exit counts. A virtual horizontal line segment (`entry_line` in `config/cameras.json`) separates the outside (street side, y < line_y) from the inside. A track whose centroid crosses inbound → `ENTRY`; outbound → `EXIT`. No other camera emits `ENTRY`/`EXIT`, which prevents double-counting across camera field-of-view overlaps (R9).
+The **entrance camera** (`entrance.mp4`, `CAM_ENTRY`, `role: entry`) is the single source of truth for entry/exit counts. A virtual horizontal line segment (`entry_line` in `config/cameras.json`) separates the outside (street side, y < line_y) from the inside. A track whose centroid crosses inbound → `ENTRY`; outbound → `EXIT`. No other camera emits `ENTRY`/`EXIT`, which prevents double-counting across camera field-of-view overlaps (R9).
 
 ### 2 — Session model
 
@@ -79,12 +79,12 @@ On a new inbound crossing the Re-ID check (colour histogram cosine similarity + 
 
 ### 3 — Zone tracking
 
-Floor cameras (CAM 2, 3, 5) and the billing camera (CAM 4) track foot position (bbox bottom-centre) against zone polygons defined in `config/zones.json`. Ray-casting point-in-polygon fires:
+Floor cameras (`CAM_FLOOR_A`, `CAM_FLOOR_B`, `CAM_FLOOR_C`) and the billing camera (`CAM_BILLING`) track foot position (bbox bottom-centre) against zone polygons defined in `config/zones.json`. Ray-casting point-in-polygon fires:
 
 - `ZONE_ENTER` on first crossing into a polygon
 - `ZONE_DWELL` every 30 s of continuous presence (cumulative `dwell_ms`)
 - `ZONE_EXIT` on leaving
-- `BILLING_QUEUE_JOIN` on entering `CASH_COUNTER`/`FOH` zones
+- `BILLING_QUEUE_JOIN` on entering the `CASH_COUNTER` zone
 - `BILLING_QUEUE_ABANDON` on leaving without a correlated POS transaction
 
 ### 4 — Staff exclusion

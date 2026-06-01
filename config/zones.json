@@ -104,23 +104,15 @@
 
     {
       "camera_id": "CAM_FLOOR_C",
-      "zone_id": "FOH",
+      "zone_id": "ACCESSORIES",
+      "_note": "Product display shelves — right side of frame where customers browse accessories.",
+      "polygon": [[640, 0], [1280, 0], [1280, 720], [640, 720]]
+    },
+    {
+      "camera_id": "CAM_FLOOR_C",
+      "zone_id": "BACKROOM",
+      "_note": "Stock/storage area — left side of frame with stacked Purplle boxes on shelves.",
       "polygon": [[0, 0], [640, 0], [640, 720], [0, 720]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_C",
-      "zone_id": "NAIL_UNIT",
-      "polygon": [[640, 0], [960, 0], [960, 360], [640, 360]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_C",
-      "zone_id": "MAKEUP_UNIT",
-      "polygon": [[640, 360], [960, 360], [960, 720], [640, 720]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_C",
-      "zone_id": "FRAGRANCE",
-      "polygon": [[960, 0], [1280, 0], [1280, 720], [960, 720]]
     }
   ]
 }

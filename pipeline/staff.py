@@ -84,7 +84,7 @@ class StaffClassifier:
                 profile.current_zone = zone_id
                 profile.current_zone_frames = 1
 
-            if zone_id in ("CASH_COUNTER", "FOH"):
+            if zone_id == "CASH_COUNTER":
                 profile.billing_visits += 1
 
         # Real-time staff classification

@@ -12,6 +12,9 @@ ultralytics>=8.0,<9.0
 opencv-python-headless>=4.8,<5.0
 lap>=0.5.12
 
+# Dashboard
+rich>=13.0,<14.0
+
 # Testing
 pytest>=7.4,<9.0
 httpx>=0.25,<1.0

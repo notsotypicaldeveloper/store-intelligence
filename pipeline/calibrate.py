@@ -33,7 +33,7 @@ def extract_frames():
         return
 
     FRAMES_DIR.mkdir(parents=True, exist_ok=True)
-    clips = sorted(CLIPS_DIR.glob("CAM*.mp4"))
+    clips = sorted(CLIPS_DIR.glob("*.mp4"))
     if not clips:
         print(f"No clips found in {CLIPS_DIR}")
         return

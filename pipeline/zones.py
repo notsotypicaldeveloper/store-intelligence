@@ -9,7 +9,7 @@ Emits:
   ZONE_EXIT   — when a track leaves a zone polygon
   ZONE_DWELL  — every DWELL_INTERVAL_FRAMES of continuous presence,
                 with cumulative dwell_ms in the event
-  BILLING_QUEUE_JOIN    — on entering the billing zone (CASH_COUNTER / FOH)
+  BILLING_QUEUE_JOIN    — on entering the billing zone (CASH_COUNTER)
   BILLING_QUEUE_ABANDON — on leaving the billing zone without a subsequent
                           POS transaction (flagged as candidate; API confirms)
 """
@@ -22,7 +22,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 DWELL_INTERVAL_FRAMES = 450   # ~30 s at 15 fps
-BILLING_ZONES = {"CASH_COUNTER", "FOH"}
+BILLING_ZONES = {"CASH_COUNTER"}
 
 
 @dataclass

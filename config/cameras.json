@@ -4,7 +4,7 @@
   "cameras": [
     {
       "camera_id": "CAM_ENTRY",
-      "clip_filename": "CAM 1.mp4",
+      "clip_filename": "entrance.mp4",
       "role": "entry",
       "frame_width": 1920,
       "frame_height": 1080,
@@ -13,7 +13,7 @@
     },
     {
       "camera_id": "CAM_FLOOR_A",
-      "clip_filename": "CAM 2.mp4",
+      "clip_filename": "floor_top_brands.mp4",
       "role": "floor",
       "frame_width": 1920,
       "frame_height": 1080,
@@ -21,7 +21,7 @@
     },
     {
       "camera_id": "CAM_FLOOR_B",
-      "clip_filename": "CAM 3.mp4",
+      "clip_filename": "floor_bottom_brands.mp4",
       "role": "floor",
       "frame_width": 1920,
       "frame_height": 1080,
@@ -29,19 +29,19 @@
     },
     {
       "camera_id": "CAM_BILLING",
-      "clip_filename": "CAM 4.mp4",
+      "clip_filename": "cash_counter.mp4",
       "role": "billing",
       "frame_width": 1280,
       "frame_height": 720,
-      "_note": "Smaller clip (~73 MB) — focused on the Cash Counter / billing area (right side of store)."
+      "_note": "Focused on the Cash Counter / billing area (right side of store)."
     },
     {
       "camera_id": "CAM_FLOOR_C",
-      "clip_filename": "CAM 5.mp4",
+      "clip_filename": "accessories_area.mp4",
       "role": "floor",
       "frame_width": 1280,
       "frame_height": 720,
-      "_note": "Smaller clip — covers F.O.H / centre aisle, Nail Unit, and Makeup Unit."
+      "_note": "Covers the accessories area and back corner of the store (styling chair, product racks, Purplle boxes)."
     }
   ]
 }
