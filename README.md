@@ -123,4 +123,3 @@ pytest tests/ -v
 
 - [`docs/DESIGN.md`](docs/DESIGN.md) — Architecture, data flow, session model, AI-assisted decisions
 - [`docs/CHOICES.md`](docs/CHOICES.md) — Three decisions: detection model, event schema, storage/runtime
-- [`STRATEGY.md`](STRATEGY.md) — Product strategy and approach
