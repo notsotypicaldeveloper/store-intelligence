@@ -1,6 +1,6 @@
 {
   "store_id": "ST1008",
-  "_note": "Zone polygons in pixel coords for each camera frame (all feeds 1920x1080). Each zone also carries official-schema metadata (official_id / zone_name / zone_type / is_revenue_zone) used to map internal events to the Purplle sample_events format. Derived from data/_layout_extracted.png; verify/refine with 'python pipeline/calibrate.py --overlay --camera <ID>' inside Docker.",
+  "_note": "Zone polygons in pixel coords for each camera frame (all feeds 1920x1080). Each zone also carries official-schema metadata (official_id / zone_name / zone_type / is_revenue_zone) used to map internal events to the Purplle sample_events format. Derived from data/Store 1 - layout.png; verify/refine with 'python pipeline/calibrate.py --overlay --camera <ID>' inside Docker.",
   "zones": [
     {
       "camera_id": "CAM_ENTRY",
