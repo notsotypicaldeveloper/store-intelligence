@@ -5,8 +5,7 @@
 # (store_layout.json, pos_transactions.csv, sample_events.jsonl, assertions.py).
 # Keep them local; the README documents where a reviewer drops them.
 # ---------------------------------------------------------------------------
-data/*
-!data/.gitkeep
+data/
 clips/
 *.mp4
 *.mov
