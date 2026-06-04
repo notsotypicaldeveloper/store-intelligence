@@ -31,8 +31,10 @@ def parse_args() -> argparse.Namespace:
         description="Store Intelligence detection pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    p.add_argument("--clips-dir", default="data/clips", help="directory containing CAM*.mp4")
-    p.add_argument("--output", default="events/events.jsonl", help="output events JSONL path")
+    p.add_argument("--clips-dir", default="data", help="directory containing the camera .mp4 files")
+    p.add_argument("--output", default="events/events.jsonl", help="output (canonical) events JSONL path")
+    p.add_argument("--official-output", default="events/events.official.jsonl",
+                   help="also write events in the Purplle sample_events schema (set '' to skip)")
     p.add_argument("--store-id", default="ST1008", help="store identifier")
     p.add_argument("--frame-skip", type=int, default=1, help="process every Nth frame (1=all, 2=half fps)")
     p.add_argument("--cameras-cfg", default="config/cameras.json")
@@ -224,6 +226,25 @@ def main() -> int:
             fh.write(json.dumps(ev, default=str) + "\n")
 
     logger.info("Pipeline complete: %d events → %s", len(all_events), output)
+
+    # Also project the canonical stream into the official sample_events schema.
+    if args.official_output:
+        try:
+            try:
+                from pipeline.to_official import convert_records, load_zone_meta
+            except ModuleNotFoundError:
+                from to_official import convert_records, load_zone_meta
+            zone_meta = load_zone_meta(args.zones_cfg)
+            official = convert_records(all_events, zone_meta, args.store_id)
+            off_path = Path(args.official_output)
+            off_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(off_path, "w", encoding="utf-8") as fh:
+                for rec in official:
+                    fh.write(json.dumps(rec) + "\n")
+            logger.info("Official schema: %d events → %s", len(official), off_path)
+        except Exception as exc:
+            logger.error("Official-schema export failed: %s", exc, exc_info=True)
+
     return 0
 
 

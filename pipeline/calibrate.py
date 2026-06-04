@@ -18,7 +18,7 @@ import os
 import sys
 from pathlib import Path
 
-CLIPS_DIR = Path("data/clips")
+CLIPS_DIR = Path("data")
 FRAMES_DIR = Path("data/_frames")
 CAMERAS_CFG = Path("config/cameras.json")
 ZONES_CFG = Path("config/zones.json")

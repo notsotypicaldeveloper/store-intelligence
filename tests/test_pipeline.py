@@ -107,12 +107,12 @@ def test_counting_loiter_no_event():
 
 def test_counting_floor_camera_no_entry():
     """Floor camera never emits ENTRY even with tracks."""
-    counter = LineCrossingCounter("CAM_FLOOR_A", ENTRY_LINE)
+    counter = LineCrossingCounter("CAM_ZONE_1", ENTRY_LINE)
     events = _entry_sequence(counter, 5, 200, 800)
     # LineCrossingCounter logic works regardless; the orchestrator (run.py) only
     # attaches a counter to entry-role cameras. Here we verify no crash.
     # In practice, floor cameras have no counter instance at all.
-    assert all(e.camera_id == "CAM_FLOOR_A" for e in events)
+    assert all(e.camera_id == "CAM_ZONE_1" for e in events)
 
 
 # ── U5b: Re-entry de-dup wiring (regression for inflated visitor count) ─────
@@ -269,9 +269,9 @@ def test_ray_cast_corner():
 
 
 def test_zone_tracker_emits_zone_enter():
-    zones = [{"zone_id": "DERMDOC", "camera_id": "CAM_FLOOR_A",
+    zones = [{"zone_id": "DERMDOC", "camera_id": "CAM_ZONE_1",
               "polygon": [[0, 0], [200, 0], [200, 200], [0, 200]]}]
-    tracker = ZoneTracker("CAM_FLOOR_A", zones, fps=15.0)
+    tracker = ZoneTracker("CAM_ZONE_1", zones, fps=15.0)
     evs = tracker.process_frame("VIS_1", (100, 100), frame_idx=0)
     types = [e.event_type for e in evs]
     assert "ZONE_ENTER" in types
@@ -279,10 +279,10 @@ def test_zone_tracker_emits_zone_enter():
 
 
 def test_zone_tracker_emits_dwell_after_interval():
-    zones = [{"zone_id": "DERMDOC", "camera_id": "CAM_FLOOR_A",
+    zones = [{"zone_id": "DERMDOC", "camera_id": "CAM_ZONE_1",
               "polygon": [[0, 0], [200, 0], [200, 200], [0, 200]]}]
     from pipeline.zones import DWELL_INTERVAL_FRAMES
-    tracker = ZoneTracker("CAM_FLOOR_A", zones, fps=15.0)
+    tracker = ZoneTracker("CAM_ZONE_1", zones, fps=15.0)
     all_evs = []
     for f in range(DWELL_INTERVAL_FRAMES + 5):
         all_evs.extend(tracker.process_frame("VIS_D", (100, 100), frame_idx=f))
@@ -349,7 +349,7 @@ def test_emit_round_trip_dict_model():
     import json
     ev = build_event(
         store_id="ST1008",
-        camera_id="CAM_FLOOR_A",
+        camera_id="CAM_ZONE_1",
         visitor_id="VIS_RT",
         event_type="ZONE_DWELL",
         timestamp="2026-04-10T10:00:00Z",

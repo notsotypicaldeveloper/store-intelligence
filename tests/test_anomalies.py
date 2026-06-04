@@ -43,7 +43,7 @@ def zone_enter(visitor_id: str, store_id: str, zone: str, minutes_ago: int = 0) 
     return {
         "event_id": str(uuid.uuid4()),
         "store_id": store_id,
-        "camera_id": "CAM_FLOOR_A",
+        "camera_id": "CAM_ZONE_1",
         "visitor_id": visitor_id,
         "event_type": "ZONE_ENTER",
         "timestamp": ts_offset(minutes_ago),

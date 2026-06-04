@@ -1,47 +1,38 @@
 {
-  "store_id": "ST1008",
-  "_note": "Brigade Road, Bangalore. Run 'python pipeline/calibrate.py --extract --overlay' inside Docker to verify entry_line and zone polygons against real frames.",
+  "store_id": "ST1008",  "_note": "Brigade Road, Bangalore. Four real camera feeds live directly in data/ (no clips/ subfolder). Files are looked up by exact name. Run 'python pipeline/calibrate.py --extract --overlay' inside Docker to verify entry_line and zone polygons against real frames. All four feeds are 1920x1080.",
   "cameras": [
     {
       "camera_id": "CAM_ENTRY",
-      "clip_filename": "entrance.mp4",
+      "clip_filename": "CAM 3 - entry.mp4",
       "role": "entry",
       "frame_width": 1920,
       "frame_height": 1080,
-      "_note": "Wide-angle camera covering the bottom-left entrance door. Entry line is a horizontal segment at ~78% of frame height — people cross it when entering/exiting.",
+      "_note": "Entrance door feed. Entry line is a horizontal segment at ~78% of frame height — people cross it when entering/exiting. Only this camera emits ENTRY/EXIT.",
       "entry_line": [[80, 840], [1840, 840]]
     },
     {
-      "camera_id": "CAM_FLOOR_A",
-      "clip_filename": "floor_top_brands.mp4",
-      "role": "floor",
+      "camera_id": "CAM_ZONE_1",
+      "clip_filename": "CAM 1 - zone.mp4",
+      "role": "zone",
       "frame_width": 1920,
       "frame_height": 1080,
-      "_note": "Overhead/wide angle covering the top-shelf brand bays (EB Korean → Accessories row)."
+      "_note": "Zone feed covering the top-shelf brand bays (EB Korean -> Accessories row). ASSUMPTION: CAM 1 = top-shelf bays; correct here after watching the clip if CAM 1/CAM 2 are swapped."
     },
     {
-      "camera_id": "CAM_FLOOR_B",
-      "clip_filename": "floor_bottom_brands.mp4",
-      "role": "floor",
+      "camera_id": "CAM_ZONE_2",
+      "clip_filename": "CAM 2 - zone.mp4",
+      "role": "zone",
       "frame_width": 1920,
       "frame_height": 1080,
-      "_note": "Overhead/wide angle covering the bottom-shelf brand bays (Maybelline → Streax row)."
+      "_note": "Zone feed covering the bottom-shelf brand bays (Maybelline -> Streax row). ASSUMPTION: CAM 2 = bottom-shelf bays; swap with CAM_ZONE_1 if footage differs."
     },
     {
       "camera_id": "CAM_BILLING",
-      "clip_filename": "cash_counter.mp4",
+      "clip_filename": "CAM 5 - billing.mp4",
       "role": "billing",
-      "frame_width": 1280,
-      "frame_height": 720,
-      "_note": "Focused on the Cash Counter / billing area (right side of store)."
-    },
-    {
-      "camera_id": "CAM_FLOOR_C",
-      "clip_filename": "accessories_area.mp4",
-      "role": "floor",
-      "frame_width": 1280,
-      "frame_height": 720,
-      "_note": "Covers the accessories area and back corner of the store (styling chair, product racks, Purplle boxes)."
+      "frame_width": 1920,
+      "frame_height": 1080,
+      "_note": "Cash Counter / billing area. The CASH_COUNTER zone drives billing-queue join/abandon events."
     }
   ]
 }

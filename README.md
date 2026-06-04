@@ -1,6 +1,6 @@
 # Store Intelligence — Brigade Road, Bangalore
 
-End-to-end CCTV → detection → event stream → analytics API for a single physical store (5 cameras).
+End-to-end CCTV → detection → event stream → analytics API for a single physical store (4 cameras).
 
 ## Instructions to Run
 
@@ -8,42 +8,36 @@ End-to-end CCTV → detection → event stream → analytics API for a single ph
 
 ### 1. Place the dataset
 
-Put all **5 videos in `data/clips/`** with these exact names — they're looked up by name, not number.
+Put the **4 camera videos directly in `data/`** (no `clips/` subfolder) with their original names — they're looked up by name in `config/cameras.json`:
 
-> ⚠️ **The `CAM 1`–`CAM 5` numbering does NOT map 1:1 to the roles below.** Watch each clip first and match it to what it actually shows, then copy it to the matching target name. Don't assume `CAM 1` = entrance.
+| File in `data/` | Role | Camera ID |
+|---|---|---|
+| `CAM 3 - entry.mp4` | Entrance door — entry/exit counting line | `CAM_ENTRY` |
+| `CAM 1 - zone.mp4` | Top-shelf brand bays | `CAM_ZONE_1` |
+| `CAM 2 - zone.mp4` | Bottom-shelf brand bays | `CAM_ZONE_2` |
+| `CAM 5 - billing.mp4` | Cash Counter / billing queue | `CAM_BILLING` |
 
-| Target name in `data/clips/` | What the clip should show |
-|---|---|
-| `entrance.mp4` | Entrance door — entry/exit counting line |
-| `floor_top_brands.mp4` | Top-shelf brand bays |
-| `floor_bottom_brands.mp4` | Bottom-shelf brand bays |
-| `cash_counter.mp4` | Cash Counter / billing area |
-| `accessories_area.mp4` | Accessories area / back corner |
+> ℹ️ The feeds are already named by role, so no renaming step is needed. There is **no CAM 4**, and `CAM 1`/`CAM 2` are *both* zone feeds. If a zone clip turns out to show the other set of bays, swap `CAM_ZONE_1`/`CAM_ZONE_2` in `config/cameras.json` (or just the `clip_filename`s). All feeds are 1920×1080.
 
-Once you've identified which source file is which, copy and rename them (example — replace the source names with your actual mapping):
-
-```bash
-mkdir -p data/clips
-cp "<clip showing entrance>"        data/clips/entrance.mp4
-cp "<clip showing top brand bays>"  data/clips/floor_top_brands.mp4
-cp "<clip showing bottom bays>"     data/clips/floor_bottom_brands.mp4
-cp "<clip showing cash counter>"    data/clips/cash_counter.mp4
-cp "<clip showing accessories>"     data/clips/accessories_area.mp4
-```
-
-The POS sales CSV can keep any name, anywhere under `data/` — auto-discovered.
+The POS sales CSV (`data/pos_transactions.csv`) can keep any name, anywhere under `data/` — auto-discovered.
 
 ### 2. Build & run
 
 ```bash
 rm -f events/events.db                                  # delete any stale DB first (fresh seed)
 docker compose build                                    # YOLOv8 baked in, runs offline
-docker compose --profile pipeline run --rm pipeline     # 5 clips → events/events.jsonl
+docker compose --profile pipeline run --rm pipeline     # 4 feeds → events/events.jsonl (+ events.official.jsonl)
 docker compose up -d api                                # API + Swagger docs on http://localhost:8000/docs
 python3 replay.py --speed 0                             # seed the database
 ```
 
 > **Note:** if `events/events.db` already exists, delete it before seeding (`rm -f events/events.db`). The DB is a generated runtime artifact; starting from a stale one can mix old and new events. A bundled `events/events.jsonl` is included so you can skip the detection pipeline and seed directly with `python3 replay.py --speed 0`.
+
+> **Two output files — by design, not duplication.** The pipeline writes **`events/events.jsonl`** (the internal/canonical stream — the single source of truth the analytics API and tests run on) and **`events/events.official.jsonl`** (the graded deliverable, projected into the Purplle `sample_events` schema). They're kept separate on purpose: the official schema is a deliberately *lossy* contract (dwell events are folded into their zone enter/exit pair, each billing join+close becomes one `queue_*` record), so it can't drive the analytics — hence the official file has fewer rows than the canonical one. The official file is a pure, tested function of the canonical one (locked by `tests/test_official_schema.py`) and can be regenerated without Docker:
+> ```bash
+> python3 pipeline/to_official.py   # events/events.jsonl → events/events.official.jsonl
+> ```
+> Demographic fields (`gender_pred`/`age_pred`/`group_id`…) are emitted **null** — present for schema conformance, not fabricated. See [`docs/CHOICES.md`](docs/CHOICES.md).
 
 ### 3. Query analytics
 
@@ -72,10 +66,12 @@ pip install rich && python3 dashboard.py --speed 50
 ## How it works
 
 ```
-5 camera clips  →  YOLOv8s + ByteTrack  →  JSONL events  →  replay.py  →  FastAPI + SQLite
+4 camera feeds  →  YOLOv8s + ByteTrack  →  JSONL events  →  replay.py  →  FastAPI + SQLite
+                                              │
+                                              └─→  events.official.jsonl (sample_events schema)
 ```
 
-1. **Detection pipeline** (`docker compose run pipeline`): processes each clip with YOLOv8s person detection and ByteTrack for stable track IDs. The entrance camera (`entrance.mp4`, `CAM_ENTRY`) detects line-crossings → ENTRY/EXIT events with unique `visitor_id` tokens. Re-entry de-dup runs a colour-histogram Re-ID against recently exited visitors. Staff are flagged via a uniform-colour + behavioural heuristic (multi-zone movement, long dwell, repeated cash-counter visits). Zone enter/exit/dwell events use point-in-polygon on the foot position. All events are validated against the Pydantic schema at emit time.
+1. **Detection pipeline** (`docker compose run pipeline`): processes each feed with YOLOv8s person detection and ByteTrack for stable track IDs. The entrance camera (`CAM 3 - entry.mp4`, `CAM_ENTRY`) detects line-crossings → ENTRY/EXIT events with unique `visitor_id` tokens. Re-entry de-dup runs a colour-histogram Re-ID against recently exited visitors. Staff are flagged via a uniform-colour + behavioural heuristic (multi-zone movement, long dwell, repeated cash-counter visits). Zone enter/exit/dwell events use point-in-polygon on the foot position. All events are validated against the Pydantic schema at emit time.
 
 2. **Replay** (`python replay.py`): streams `events/events.jsonl` into `POST /events/ingest` in configurable batches. Re-running is idempotent — duplicate `event_id`s are ignored.
 
@@ -106,7 +102,8 @@ Zone polygons and the entry line are configured in `config/cameras.json` and `co
 # Inside Docker (has OpenCV + ffmpeg):
 docker compose run --rm pipeline python pipeline/calibrate.py --extract
 docker compose run --rm pipeline python pipeline/calibrate.py --overlay --camera CAM_ENTRY
-# Overlay image written to data/_frames/entrance_overlay.jpg
+docker compose run --rm pipeline python pipeline/calibrate.py --overlay --camera CAM_ZONE_1
+# Overlay image written to data/_frames/<clip-stem>_overlay.jpg
 ```
 
 ---
@@ -118,7 +115,7 @@ pip install -r requirements.txt
 pytest tests/ -v
 ```
 
-63 tests covering: schema validation, idempotent ingest, session-based funnel, heatmap confidence, POS conversion (time-window + brand-dwell), anomaly detection (queue spike, dead zone), health stale-feed, pipeline line-crossing, Re-ID, staff heuristic, zone tracking, and emit/schema round-trips.
+71 tests covering: schema validation, idempotent ingest, session-based funnel, heatmap confidence, POS conversion (time-window + brand-dwell), anomaly detection (queue spike, dead zone), health stale-feed, pipeline line-crossing, Re-ID, staff heuristic, zone tracking, emit/schema round-trips, and official `sample_events` schema conformance.
 
 ---
 

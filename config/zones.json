@@ -1,118 +1,182 @@
 {
   "store_id": "ST1008",
-  "_note": "Zone polygons in pixel coords for each camera frame. Derived from data/_layout_extracted.png and approximate field-of-view mapping. Verify/refine with 'python pipeline/calibrate.py --overlay --camera <ID>' inside Docker.",
+  "_note": "Zone polygons in pixel coords for each camera frame (all feeds 1920x1080). Each zone also carries official-schema metadata (official_id / zone_name / zone_type / is_revenue_zone) used to map internal events to the Purplle sample_events format. Derived from data/_layout_extracted.png; verify/refine with 'python pipeline/calibrate.py --overlay --camera <ID>' inside Docker.",
   "zones": [
     {
       "camera_id": "CAM_ENTRY",
       "zone_id": "FOH",
+      "official_id": "PURPLLE_BLR_1008_Z_FOH",
+      "zone_name": "Front of House",
+      "zone_type": "ENTRANCE",
+      "is_revenue_zone": "No",
       "_note": "Front-of-house / entrance corridor visible in entry camera",
       "polygon": [[0, 0], [1920, 0], [1920, 840], [0, 840]]
     },
 
     {
-      "camera_id": "CAM_FLOOR_A",
+      "camera_id": "CAM_ZONE_1",
       "zone_id": "EB_KOREAN",
-      "polygon": [[0, 0], [220, 0], [220, 480], [0, 480]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_A",
-      "zone_id": "THE_FACE_SHOP",
-      "polygon": [[220, 0], [440, 0], [440, 480], [220, 480]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_A",
-      "zone_id": "GOOD_VIBES",
-      "polygon": [[440, 0], [660, 0], [660, 480], [440, 480]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_A",
-      "zone_id": "DERMDOC",
-      "polygon": [[660, 0], [900, 0], [900, 480], [660, 480]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_A",
-      "zone_id": "MINIMALIST",
-      "polygon": [[900, 0], [1140, 0], [1140, 480], [900, 480]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_A",
-      "zone_id": "AQUALOGICA",
-      "polygon": [[1140, 0], [1380, 0], [1380, 480], [1140, 480]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_A",
-      "zone_id": "LAKME_SKIN",
-      "polygon": [[1380, 0], [1620, 0], [1620, 480], [1380, 480]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_A",
-      "zone_id": "ACCESSORIES",
-      "polygon": [[1620, 0], [1920, 0], [1920, 480], [1620, 480]]
-    },
-
-    {
-      "camera_id": "CAM_FLOOR_B",
-      "zone_id": "MAYBELLINE",
+      "official_id": "PURPLLE_BLR_1008_Z01",
+      "zone_name": "EB Korean",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
       "polygon": [[0, 0], [240, 0], [240, 1080], [0, 1080]]
     },
     {
-      "camera_id": "CAM_FLOOR_B",
-      "zone_id": "FACES_CANADA",
+      "camera_id": "CAM_ZONE_1",
+      "zone_id": "THE_FACE_SHOP",
+      "official_id": "PURPLLE_BLR_1008_Z02",
+      "zone_name": "The Face Shop",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
       "polygon": [[240, 0], [480, 0], [480, 1080], [240, 1080]]
     },
     {
-      "camera_id": "CAM_FLOOR_B",
-      "zone_id": "LAKME",
+      "camera_id": "CAM_ZONE_1",
+      "zone_id": "GOOD_VIBES",
+      "official_id": "PURPLLE_BLR_1008_Z03",
+      "zone_name": "Good Vibes",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
       "polygon": [[480, 0], [720, 0], [720, 1080], [480, 1080]]
     },
     {
-      "camera_id": "CAM_FLOOR_B",
-      "zone_id": "COLORBAR_SUGAR",
+      "camera_id": "CAM_ZONE_1",
+      "zone_id": "DERMDOC",
+      "official_id": "PURPLLE_BLR_1008_Z04",
+      "zone_name": "Dermdoc",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
       "polygon": [[720, 0], [960, 0], [960, 1080], [720, 1080]]
     },
     {
-      "camera_id": "CAM_FLOOR_B",
-      "zone_id": "SWISS_BEAUTY",
+      "camera_id": "CAM_ZONE_1",
+      "zone_id": "MINIMALIST",
+      "official_id": "PURPLLE_BLR_1008_Z05",
+      "zone_name": "Minimalist",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
       "polygon": [[960, 0], [1200, 0], [1200, 1080], [960, 1080]]
     },
     {
-      "camera_id": "CAM_FLOOR_B",
-      "zone_id": "RENEE_NY_BAE",
+      "camera_id": "CAM_ZONE_1",
+      "zone_id": "AQUALOGICA",
+      "official_id": "PURPLLE_BLR_1008_Z06",
+      "zone_name": "Aqualogica",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
       "polygon": [[1200, 0], [1440, 0], [1440, 1080], [1200, 1080]]
     },
     {
-      "camera_id": "CAM_FLOOR_B",
-      "zone_id": "ALPS_GOODNESS",
+      "camera_id": "CAM_ZONE_1",
+      "zone_id": "LAKME_SKIN",
+      "official_id": "PURPLLE_BLR_1008_Z07",
+      "zone_name": "Lakme Skin",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
       "polygon": [[1440, 0], [1680, 0], [1680, 1080], [1440, 1080]]
     },
     {
-      "camera_id": "CAM_FLOOR_B",
+      "camera_id": "CAM_ZONE_1",
+      "zone_id": "ACCESSORIES",
+      "official_id": "PURPLLE_BLR_1008_Z08",
+      "zone_name": "Accessories",
+      "zone_type": "DISPLAY",
+      "is_revenue_zone": "Yes",
+      "polygon": [[1680, 0], [1920, 0], [1920, 1080], [1680, 1080]]
+    },
+
+    {
+      "camera_id": "CAM_ZONE_2",
+      "zone_id": "MAYBELLINE",
+      "official_id": "PURPLLE_BLR_1008_Z09",
+      "zone_name": "Maybelline",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
+      "polygon": [[0, 0], [240, 0], [240, 1080], [0, 1080]]
+    },
+    {
+      "camera_id": "CAM_ZONE_2",
+      "zone_id": "FACES_CANADA",
+      "official_id": "PURPLLE_BLR_1008_Z10",
+      "zone_name": "Faces Canada",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
+      "polygon": [[240, 0], [480, 0], [480, 1080], [240, 1080]]
+    },
+    {
+      "camera_id": "CAM_ZONE_2",
+      "zone_id": "LAKME",
+      "official_id": "PURPLLE_BLR_1008_Z11",
+      "zone_name": "Lakme",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
+      "polygon": [[480, 0], [720, 0], [720, 1080], [480, 1080]]
+    },
+    {
+      "camera_id": "CAM_ZONE_2",
+      "zone_id": "COLORBAR_SUGAR",
+      "official_id": "PURPLLE_BLR_1008_Z12",
+      "zone_name": "Colorbar & Sugar",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
+      "polygon": [[720, 0], [960, 0], [960, 1080], [720, 1080]]
+    },
+    {
+      "camera_id": "CAM_ZONE_2",
+      "zone_id": "SWISS_BEAUTY",
+      "official_id": "PURPLLE_BLR_1008_Z13",
+      "zone_name": "Swiss Beauty",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
+      "polygon": [[960, 0], [1200, 0], [1200, 1080], [960, 1080]]
+    },
+    {
+      "camera_id": "CAM_ZONE_2",
+      "zone_id": "RENEE_NY_BAE",
+      "official_id": "PURPLLE_BLR_1008_Z14",
+      "zone_name": "Renee & NY Bae",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
+      "polygon": [[1200, 0], [1440, 0], [1440, 1080], [1200, 1080]]
+    },
+    {
+      "camera_id": "CAM_ZONE_2",
+      "zone_id": "ALPS_GOODNESS",
+      "official_id": "PURPLLE_BLR_1008_Z15",
+      "zone_name": "Alps Goodness",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
+      "polygon": [[1440, 0], [1680, 0], [1680, 1080], [1440, 1080]]
+    },
+    {
+      "camera_id": "CAM_ZONE_2",
       "zone_id": "STREAX",
+      "official_id": "PURPLLE_BLR_1008_Z16",
+      "zone_name": "Streax",
+      "zone_type": "SHELF",
+      "is_revenue_zone": "Yes",
       "polygon": [[1680, 0], [1920, 0], [1920, 1080], [1680, 1080]]
     },
 
     {
       "camera_id": "CAM_BILLING",
       "zone_id": "CASH_COUNTER",
-      "polygon": [[0, 0], [960, 0], [960, 720], [0, 720]]
+      "official_id": "PURPLLE_BLR_1008_Z_BILLING_01",
+      "zone_name": "Billing Counter Queue",
+      "zone_type": "BILLING",
+      "is_revenue_zone": "Yes",
+      "_note": "zone_id must stay CASH_COUNTER — pipeline/zones.py keys billing-queue logic on this exact id.",
+      "polygon": [[0, 0], [1280, 0], [1280, 1080], [0, 1080]]
     },
     {
       "camera_id": "CAM_BILLING",
       "zone_id": "PMU",
-      "polygon": [[960, 0], [1280, 0], [1280, 720], [960, 720]]
-    },
-
-    {
-      "camera_id": "CAM_FLOOR_C",
-      "zone_id": "ACCESSORIES",
-      "_note": "Product display shelves — right side of frame where customers browse accessories.",
-      "polygon": [[640, 0], [1280, 0], [1280, 720], [640, 720]]
-    },
-    {
-      "camera_id": "CAM_FLOOR_C",
-      "zone_id": "BACKROOM",
-      "_note": "Stock/storage area — left side of frame with stacked Purplle boxes on shelves.",
-      "polygon": [[0, 0], [640, 0], [640, 720], [0, 720]]
+      "official_id": "PURPLLE_BLR_1008_Z17",
+      "zone_name": "PMU Studio",
+      "zone_type": "DISPLAY",
+      "is_revenue_zone": "Yes",
+      "polygon": [[1280, 0], [1920, 0], [1920, 1080], [1280, 1080]]
     }
   ]
 }

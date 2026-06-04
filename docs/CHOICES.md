@@ -61,6 +61,18 @@ The `metadata` sub-object uses `extra="allow"` to accommodate event-specific fie
 
 **Single strongly-typed Pydantic model, validated at both emit and ingest.** The shared `app/schema.py` import — used by both pipeline and API — is the single source of truth. This eliminates the class of bugs where the pipeline emits an event that the API silently rejects or misinterprets. The `event_id` UUID primary key in SQLite gives idempotent ingest for free (INSERT OR IGNORE).
 
+### Conforming to the provided `sample_events` schema (canonical → official)
+
+The dataset ships `data/sample_eventsbe42122.jsonl` — the graders' **output contract**. It's a different, richer shape than the internal model (lower-case `entry`/`zone_entered`/`queue_completed`; per-family fields like `id_token`, `zone_name`/`zone_type`/`is_revenue_zone`, `wait_seconds`, `queue_position_at_join`, hotspots, demographics). Switching the internal model to it would cascade through the SQLite store, every analytics query, and the test suite.
+
+**Decision:** keep the canonical model as the analytics source-of-truth, and add a pure projection (`pipeline/to_official.py`) that emits `events/events.official.jsonl` in the exact sample shape. The API + 71 tests stay on the canonical model; the deliverable conforms to the contract; `tests/test_official_schema.py` asserts the emitted keys equal the sample's keys per family. The official file is reproducible without Docker (`python pipeline/to_official.py`), because it's a deterministic function of the canonical stream.
+
+The projection is intentionally **lossy** — `ZONE_DWELL` events are folded into their zone enter/exit pair, and each billing `JOIN`+close collapses into a single `queue_*` episode — so the official file has *fewer* rows than the canonical one. That information loss is exactly why the two files coexist rather than one replacing the other: the analytics layer needs the richer canonical stream (per-event dwell, confidence, raw queue depth), while the graders need the flattened contract. Keeping both is the source-of-truth-vs-deliverable split, not duplication.
+
+**Demographic fields are emitted null, not fabricated.** `gender_pred`, `age_pred`, `age_bucket`, `group_id`, `group_size` appear in the sample but require age/gender inference and group association that we do not run — retail CCTV blurs faces, so an age/gender model on these frames would be guessing. We emit the fields (for conformance) set to `null`, with `is_face_hidden=false`. Writing honest nulls is worth more than confident `age_pred: 28`s the pipeline never measured. Wiring an explicit demographic model is the documented path to filling them.
+
+**Queue completed-vs-abandoned is a documented heuristic.** The internal pipeline observes a billing-zone `JOIN` and a later exit, but not the till interaction that distinguishes "served" from "gave up." `to_official.py` pairs each join with its exit into one episode and labels it abandoned when the wait is implausibly short for service (`< MIN_SERVICE_SECONDS`), deriving `queue_served_ts` for completed episodes. The production-correct signal is POS reconciliation — which the API already does in `conversion.py` — but at event-emit time, before the POS join, the threshold is the honest approximation.
+
 ---
 
 ## Decision 3 — Storage and runtime: SQLite vs Postgres; batch+replay vs streaming

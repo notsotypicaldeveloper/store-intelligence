@@ -45,7 +45,7 @@ def zone_event(visitor_id: str, zone: str = "DERMDOC", store_id: str = STORE) ->
     return {
         "event_id": str(uuid.uuid4()),
         "store_id": store_id,
-        "camera_id": "CAM_FLOOR_A",
+        "camera_id": "CAM_ZONE_1",
         "visitor_id": visitor_id,
         "event_type": "ZONE_ENTER",
         "timestamp": ts(),

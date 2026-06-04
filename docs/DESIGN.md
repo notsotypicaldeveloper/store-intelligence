@@ -1,12 +1,12 @@
 # Store Intelligence — Architecture & Design
 
-Brigade Road, Bangalore · Single store · 5 cameras · Batch + replay pipeline
+Brigade Road, Bangalore · Single store · 4 cameras · Batch + replay pipeline
 
 ---
 
 ## Problem statement
 
-Physical stores are an analytics blind spot: real-time visibility online, near-zero insight into footfall, dwell, conversion, or queue lengths in-store. This system converts raw CCTV from one real Purplle store (Brigade Road, 5 cameras) into trustworthy, queryable store analytics — without the de-dup and staff-counting errors that inflate vendor numbers.
+Physical stores are an analytics blind spot: real-time visibility online, near-zero insight into footfall, dwell, conversion, or queue lengths in-store. This system converts raw CCTV from one real Purplle store (Brigade Road, 4 cameras) into trustworthy, queryable store analytics — without the de-dup and staff-counting errors that inflate vendor numbers.
 
 The unit of truth is the **visitor session**. The north-star metric is **offline conversion rate**: purchasing visitors ÷ unique visitors (staff excluded, re-entries collapsed).
 
@@ -14,8 +14,10 @@ The unit of truth is the **visitor session**. The north-star metric is **offline
 
 ## Architecture overview
 
+The four feeds map to roles by name (no `CAM 1`–`CAM 5` ↔ role assumption): `CAM 3 - entry.mp4` → entry/exit, `CAM 1 - zone.mp4` + `CAM 2 - zone.mp4` → shelf/aisle dwell, `CAM 5 - billing.mp4` → billing queue. There is no CAM 4. All feeds are 1920×1080. Files live directly in `data/` (no `clips/` subfolder).
+
 ```
-data/clips/*.mp4
+data/*.mp4   (CAM 1/2/3/5)
         │
         ▼
 ┌─────────────────────────────────────────┐
@@ -35,11 +37,14 @@ data/clips/*.mp4
 │                  BILLING_QUEUE_JOIN     │
 │  emit.py   ── Pydantic validation +     │
 │                JSONL write              │
+│  to_official ─ project canonical →      │
+│                Purplle sample_events    │
 │  run.py    ── orchestrates all cameras  │
-└────────────────┬────────────────────────┘
-                 │ events/events.jsonl
-                 ▼
-          replay.py  (streams JSONL → API)
+└──────┬───────────────────────┬──────────┘
+       │ events/events.jsonl    │ events/events.official.jsonl
+       │ (canonical, seeds API) │ (matches sample_events schema)
+       ▼                        ▼
+ replay.py  (streams JSONL → API)   graders' deliverable
                  │
                  ▼
 ┌─────────────────────────────────────────┐
@@ -69,7 +74,7 @@ data/clips/*.mp4
 
 Each video clip is processed independently. YOLOv8s detects persons per frame; ByteTrack assigns stable `track_id`s across frames (handles occlusion by keeping low-confidence boxes in the association graph rather than dropping them).
 
-The **entrance camera** (`entrance.mp4`, `CAM_ENTRY`, `role: entry`) is the single source of truth for entry/exit counts. A virtual horizontal line segment (`entry_line` in `config/cameras.json`) separates the outside (street side, y < line_y) from the inside. A track whose centroid crosses inbound → `ENTRY`; outbound → `EXIT`. No other camera emits `ENTRY`/`EXIT`, which prevents double-counting across camera field-of-view overlaps (R9).
+The **entrance camera** (`CAM 3 - entry.mp4`, `CAM_ENTRY`, `role: entry`) is the single source of truth for entry/exit counts. A virtual horizontal line segment (`entry_line` in `config/cameras.json`) separates the outside (street side, y < line_y) from the inside. A track whose centroid crosses inbound → `ENTRY`; outbound → `EXIT`. No other camera emits `ENTRY`/`EXIT`, which prevents double-counting across camera field-of-view overlaps (R9).
 
 ### 2 — Session model
 
@@ -79,7 +84,7 @@ On a new inbound crossing the Re-ID check (colour histogram cosine similarity + 
 
 ### 3 — Zone tracking
 
-Floor cameras (`CAM_FLOOR_A`, `CAM_FLOOR_B`, `CAM_FLOOR_C`) and the billing camera (`CAM_BILLING`) track foot position (bbox bottom-centre) against zone polygons defined in `config/zones.json`. Ray-casting point-in-polygon fires:
+The two zone cameras (`CAM_ZONE_1` = top-shelf bays, `CAM_ZONE_2` = bottom-shelf bays) and the billing camera (`CAM_BILLING`) track foot position (bbox bottom-centre) against zone polygons defined in `config/zones.json`. The entry camera also carries an `FOH` (front-of-house) zone. Ray-casting point-in-polygon fires:
 
 - `ZONE_ENTER` on first crossing into a polygon
 - `ZONE_DWELL` every 30 s of continuous presence (cumulative `dwell_ms`)
@@ -112,6 +117,29 @@ All endpoints query live from SQLite — no materialised views, no precomputed a
 **Anomalies**: queue spike (depth ≥ 5 → CRITICAL, ≥ 3 → WARN), dead zone (no zone entries in 30 min → INFO), conversion drop (recent 2-hour proxy vs day baseline → WARN). All include a `suggested_action` string for operational response.
 
 **Health**: last event timestamp per store; `STALE_FEED=true` if >10 minutes behind replay clock (R15).
+
+---
+
+## Output schema: canonical vs official
+
+The pipeline carries **two** event representations:
+
+- **Canonical** (`app/schema.py`, `events/events.jsonl`) — the internal contract the analytics API, SQLite store, and 71 tests run on. Upper-case event types (`ENTRY`, `ZONE_ENTER`, `BILLING_QUEUE_JOIN`…), one flat shape with `metadata`.
+- **Official** (`events/events.official.jsonl`) — the exact shape of the graders' `data/sample_eventsbe42122.jsonl`: lower-case `entry`/`zone_entered`/`queue_completed`, per-family field sets (`id_token`, `zone_name`/`zone_type`/`is_revenue_zone`, queue lifecycle, hotspots).
+
+`pipeline/to_official.py` is a pure function from canonical → official, so the official file is fully reproducible without Docker/OpenCV (`python pipeline/to_official.py`). Keeping the canonical stream as source-of-truth means conforming to the contract never destabilises the tested API. Mapping:
+
+| Canonical | Official | Notes |
+|---|---|---|
+| `ENTRY` / `EXIT` | `entry` / `exit` | `visitor_id` → stable `id_token` |
+| `REENTRY` | `entry` | same `id_token` (a returning visitor) |
+| `ZONE_ENTER` / `ZONE_EXIT` | `zone_entered` / `zone_exited` | zone metadata + centroid hotspot from `config/zones.json` |
+| `ZONE_DWELL` | *(dropped)* | dwell is implied by the enter/exit pair |
+| `BILLING_QUEUE_JOIN` + `…_ABANDON` | `queue_completed` / `queue_abandoned` | paired into one queue episode with `wait_seconds`, `queue_position_at_join` |
+
+Fields the schema requires but in-store vision can't truthfully produce (`gender_pred`, `age_pred`, `age_bucket`, `group_id`, `group_size`) are emitted **null**, and `is_face_hidden` defaults **false** — present for conformance, never fabricated. Completed-vs-abandoned and `queue_served_ts` are heuristics over the observed billing episode; see CHOICES.md.
+
+A conformance test (`tests/test_official_schema.py`) asserts the emitted keys match the sample file exactly, per event family.
 
 ---
 

@@ -66,7 +66,7 @@ def make_zone_enter(visitor_id: str, store_id: str, zone: str, t: datetime) -> d
     return {
         "event_id": str(uuid.uuid4()),
         "store_id": store_id,
-        "camera_id": "CAM_FLOOR_A",
+        "camera_id": "CAM_ZONE_1",
         "visitor_id": visitor_id,
         "event_type": "ZONE_ENTER",
         "timestamp": ts(t),
