@@ -6,7 +6,9 @@ Usage:
     python replay.py [--file PATH] [--api URL] [--batch-size N] [--speed FACTOR]
 """
 import argparse
+import importlib.util
 import json
+import pathlib
 import sys
 import time
 import urllib.request
@@ -64,6 +66,23 @@ def main() -> int:
             time.sleep(1.0 / args.speed)
 
     print(f"\nDone. accepted={accepted} rejected={rejected}")
+
+    # Keep events.official.jsonl in sync with the source events.jsonl.
+    try:
+        from pipeline.to_official import convert_file
+    except ModuleNotFoundError:
+        spec = importlib.util.spec_from_file_location(
+            "to_official",
+            pathlib.Path(__file__).parent / "pipeline" / "to_official.py",
+        )
+        mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+        spec.loader.exec_module(mod)  # type: ignore[union-attr]
+        convert_file = mod.convert_file  # type: ignore[attr-defined]
+
+    official_path = pathlib.Path(args.file).parent / "events.official.jsonl"
+    n = convert_file(args.file, official_path, "config/zones.json", "ST1008")
+    print(f"events.official.jsonl updated ({n} events)")
+
     return 0 if rejected == 0 else 1
 
 
