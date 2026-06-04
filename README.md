@@ -1,4 +1,15 @@
-# Store Intelligence — Brigade Road, Bangalore
+# Store Intelligence
+
+## Submission Deliverables
+
+| File | Location | Notes |
+|---|---|---|
+| Event log (JSONL) | [`events.jsonl`](events.jsonl) | Official schema — follows `sample_events.jsonl`; 976 events from 4 cameras |
+| README | [`README.md`](README.md) | This file |
+| Design doc | [`docs/DESIGN.md`](docs/DESIGN.md) | Architecture, data flow, session model, AI-Assisted Decisions section |
+| Choices doc | [`docs/CHOICES.md`](docs/CHOICES.md) | Model selection, schema design, API/storage decisions |
+
+> To regenerate `events.jsonl` without Docker: `python3 pipeline/to_official.py` (reads `events/events.jsonl`, writes repo-root `events.jsonl`).
 
 End-to-end CCTV → detection → event stream → analytics API for a single physical store (4 cameras).
 
